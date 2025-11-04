@@ -151,43 +151,126 @@ class Tree:
             if current.right:
                 queue.append(current.right)
         return None
-    def visualize(self, title="Árvore de Decisão", figsize=(12, 8), save_path=None):
+    def visualize(self, title="Árvore de Decisão", figsize=(20, 12), save_path=None, max_char_per_line=30):
         """
         Visualiza a árvore de decisão usando matplotlib e networkx.
+        Otimizada para textos longos (perguntas).
+        
         Argumentos:
             title: Título do gráfico
-            figsize: Tamanho da figura (largura, altura)
+            figsize: Tamanho da figura (largura, altura) - padrão aumentado para (20, 12)
             save_path: Caminho para salvar a imagem (opcional)
+            max_char_per_line: Máximo de caracteres por linha antes de quebrar (padrão 30)
         """
+        import textwrap
+        
+        def truncate_text(text, max_length=40):
+            """Trunca texto longo e adiciona reticências"""
+            if len(text) <= max_length:
+                return text
+            return text[:max_length-3] + "..."
+        
+        def wrap_text(text, width=30):
+            """Quebra texto em múltiplas linhas"""
+            # Remove quebras de linha existentes e texto muito longo
+            text = text.replace('\n', ' ').strip()
+            if len(text) > 150:  # Limita texto muito longo
+                text = text[:150] + "..."
+            return '\n'.join(textwrap.wrap(text, width=width))
+        
         def build_graph(tree, graph, pos, x=0, y=0, layer=1, parent=None, direction=""):
             if tree is None:
                 return graph, pos
+            
             node_id = id(tree)
-            graph.add_node(node_id, label=tree.value)
+            # Aplica quebra de linha no texto
+            wrapped_label = wrap_text(tree.value, width=max_char_per_line)
+            graph.add_node(node_id, label=wrapped_label)
             pos[node_id] = (x, y)
+            
             if parent is not None:
                 graph.add_edge(parent, node_id, label=direction)
-            width = 4 / (2 ** layer)
+            
+            # Ajusta o espaçamento horizontal baseado na profundidade
+            width = 8 / (2 ** layer)
+            
             if tree.left:
-                build_graph(tree.left, graph, pos, x - width, y - 1, layer + 1, node_id, "Sim")
+                build_graph(tree.left, graph, pos, x - width, y - 1.5, layer + 1, node_id, "Sim")
             if tree.right:
-                build_graph(tree.right, graph, pos, x + width, y - 1, layer + 1, node_id, "Não")
+                build_graph(tree.right, graph, pos, x + width, y - 1.5, layer + 1, node_id, "Não")
+            
             return graph, pos
+        
         G = nx.DiGraph()
         positions = {}
         build_graph(self, G, positions)
-        plt.figure(figsize=figsize)
+        
+        # Cria figura com fundo branco
+        fig, ax = plt.subplots(figsize=figsize, facecolor='white')
+        ax.set_facecolor('white')
+        
         labels = nx.get_node_attributes(G, 'label')
-        nx.draw_networkx_nodes(G, positions, node_color='lightblue', node_size=3000, node_shape='o')
-        nx.draw_networkx_edges(G, positions, edge_color='gray', arrows=True, arrowsize=20, width=2)
-        nx.draw_networkx_labels(G, positions, labels, font_size=10, font_weight='bold')
+        
+        # Calcula tamanho dos nós baseado no conteúdo
+        node_sizes = []
+        for node in G.nodes():
+            label = labels[node]
+            num_lines = label.count('\n') + 1
+            # Aumenta o tamanho do nó baseado no número de linhas
+            size = 2000 + (num_lines * 500)
+            node_sizes.append(size)
+        
+        # Desenha nós com cor gradiente baseado na profundidade
+        nx.draw_networkx_nodes(
+            G, positions, 
+            node_color='#E3F2FD',  # Azul claro
+            node_size=node_sizes,
+            node_shape='s',  # Formato retangular para acomodar texto
+            edgecolors='#1976D2',  # Borda azul escura
+            linewidths=2,
+            ax=ax
+        )
+        
+        # Desenha arestas
+        nx.draw_networkx_edges(
+            G, positions, 
+            edge_color='#616161',  # Cinza escuro
+            arrows=True, 
+            arrowsize=15, 
+            width=1.5,
+            arrowstyle='-|>',
+            connectionstyle='arc3,rad=0.1',  # Leve curvatura
+            ax=ax
+        )
+        
+        # Desenha labels dos nós
+        nx.draw_networkx_labels(
+            G, positions, labels, 
+            font_size=8, 
+            font_weight='normal',
+            font_family='sans-serif',
+            verticalalignment='center',
+            horizontalalignment='center',
+            ax=ax
+        )
+        
+        # Desenha labels das arestas (Sim/Não)
         edge_labels = nx.get_edge_attributes(G, 'label')
-        nx.draw_networkx_edge_labels(G, positions, edge_labels, font_size=9, font_color='red')
-        plt.title(title, fontsize=16, fontweight='bold')
+        nx.draw_networkx_edge_labels(
+            G, positions, edge_labels, 
+            font_size=10, 
+            font_color='#D32F2F',  # Vermelho
+            font_weight='bold',
+            ax=ax
+        )
+        
+        plt.title(title, fontsize=18, fontweight='bold', pad=20)
         plt.axis('off')
         plt.tight_layout()
+        
         if save_path:
-            plt.savefig(save_path, dpi=300, bbox_inches='tight')
+            plt.savefig(save_path, dpi=300, bbox_inches='tight', facecolor='white')
+        
         plt.show()
     def print(self):
         """
