@@ -216,8 +216,8 @@ class Tree:
         for node in G.nodes():
             label = labels[node]
             num_lines = label.count('\n') + 1
-            # Aumenta o tamanho do nó baseado no número de linhas
-            size = 2000 + (num_lines * 500)
+            # Tamanho base maior e melhor proporção
+            size = 3500 + (num_lines * 400)
             node_sizes.append(size)
         
         # Desenha nós com cor gradiente baseado na profundidade
@@ -227,26 +227,26 @@ class Tree:
             node_size=node_sizes,
             node_shape='s',  # Formato retangular para acomodar texto
             edgecolors='#1976D2',  # Borda azul escura
-            linewidths=2,
+            linewidths=2.5,
             ax=ax
         )
         
         # Desenha arestas
         nx.draw_networkx_edges(
             G, positions, 
-            edge_color='#616161',  # Cinza escuro
+            edge_color='#424242',  # Cinza mais escuro para melhor contraste
             arrows=True, 
-            arrowsize=15, 
-            width=1.5,
+            arrowsize=20, 
+            width=2,
             arrowstyle='-|>',
-            connectionstyle='arc3,rad=0.1',  # Leve curvatura
+            connectionstyle='arc3,rad=0.08',  # Leve curvatura
             ax=ax
         )
         
         # Desenha labels dos nós
         nx.draw_networkx_labels(
             G, positions, labels, 
-            font_size=8, 
+            font_size=9,  # Aumentado para melhor legibilidade
             font_weight='normal',
             font_family='sans-serif',
             verticalalignment='center',
@@ -258,13 +258,13 @@ class Tree:
         edge_labels = nx.get_edge_attributes(G, 'label')
         nx.draw_networkx_edge_labels(
             G, positions, edge_labels, 
-            font_size=10, 
-            font_color='#D32F2F',  # Vermelho
+            font_size=11,  # Aumentado
+            font_color='#C62828',  # Vermelho mais escuro
             font_weight='bold',
             ax=ax
         )
         
-        plt.title(title, fontsize=18, fontweight='bold', pad=20)
+        plt.title(title, fontsize=20, fontweight='bold', pad=25)
         plt.axis('off')
         plt.tight_layout()
         

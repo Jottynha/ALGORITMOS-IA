@@ -19,6 +19,225 @@ Outra Árvore com 6 níveis de profundidade e 32 correntes filosóficas possíve
 """
 
 from tree import Tree
+from tree_visualization_extended import visualize_with_categories
+
+# Dicionário com recomendações de livros para cada corrente filosófica
+LIVROS_RECOMENDADOS = {
+    "RACIONALISMO PLATONICO": [
+        ("A República", "Platão", "Obra fundamental sobre justiça, política e teoria das Formas"),
+        ("Fédon", "Platão", "Diálogo sobre imortalidade da alma e mundo das Ideias"),
+        ("O Banquete", "Platão", "Sobre o amor e a ascensão ao mundo inteligível"),
+        ("Teeteto", "Platão", "Investigação sobre a natureza do conhecimento"),
+    ],
+    "RACIONALISMO CARTESIANO": [
+        ("Meditações Metafísicas", "René Descartes", "A dúvida metódica e o cogito ergo sum"),
+        ("Discurso do Método", "René Descartes", "Fundamentos do método científico moderno"),
+        ("Princípios da Filosofia", "René Descartes", "Sistema completo da filosofia cartesiana"),
+        ("Regras para a Direção do Espírito", "René Descartes", "Método para alcançar verdades"),
+    ],
+    "RACIONALISMO SPINOZISTA": [
+        ("Ética", "Baruch Spinoza", "Obra-prima sobre Deus, natureza e liberdade humana"),
+        ("Tratado Teológico-Político", "Baruch Spinoza", "Sobre liberdade de pensamento e religião"),
+        ("Tratado da Correção do Intelecto", "Baruch Spinoza", "Método para alcançar conhecimento verdadeiro"),
+    ],
+    "RACIONALISMO LEIBNIZIANO": [
+        ("Monadologia", "Gottfried Leibniz", "Teoria das mônadas e harmonia preestabelecida"),
+        ("Novos Ensaios sobre o Entendimento Humano", "Gottfried Leibniz", "Resposta ao empirismo de Locke"),
+        ("Discurso de Metafísica", "Gottfried Leibniz", "Fundamentos da metafísica leibniziana"),
+        ("Teodiceia", "Gottfried Leibniz", "Sobre o problema do mal e o melhor dos mundos possíveis"),
+    ],
+    "EMPIRISMO LOCKEANO": [
+        ("Ensaio sobre o Entendimento Humano", "John Locke", "Obra fundamental do empirismo moderno"),
+        ("Dois Tratados sobre o Governo", "John Locke", "Teoria política liberal e direitos naturais"),
+        ("Carta sobre a Tolerância", "John Locke", "Defesa da liberdade religiosa"),
+    ],
+    "EMPIRISMO HUMEANO": [
+        ("Investigação sobre o Entendimento Humano", "David Hume", "Crítica da causalidade e conhecimento"),
+        ("Tratado da Natureza Humana", "David Hume", "Sistema completo da filosofia humeana"),
+        ("Diálogos sobre a Religião Natural", "David Hume", "Crítica aos argumentos teístas"),
+        ("Investigação sobre os Princípios da Moral", "David Hume", "Teoria moral baseada no sentimento"),
+    ],
+    "EMPIRISMO BERKELEYANO": [
+        ("Tratado sobre os Princípios do Conhecimento Humano", "George Berkeley", "O imaterialismo: esse est percipi"),
+        ("Três Diálogos entre Hylas e Philonous", "George Berkeley", "Defesa do idealismo imaterialista"),
+    ],
+    "POSITIVISMO LOGICO": [
+        ("Tractatus Logico-Philosophicus", "Ludwig Wittgenstein", "Limites da linguagem e do mundo"),
+        ("A Construção Lógica do Mundo", "Rudolf Carnap", "Fundamentos do positivismo lógico"),
+        ("Linguagem, Verdade e Lógica", "A.J. Ayer", "Verificacionismo e crítica da metafísica"),
+    ],
+    "POSITIVISMO COMTEANO": [
+        ("Curso de Filosofia Positiva", "Auguste Comte", "Fundamentos do positivismo científico"),
+        ("Discurso sobre o Espírito Positivo", "Auguste Comte", "Método positivo e ciência"),
+    ],
+    "PRAGMATISMO INSTRUMENTALISTA": [
+        ("Lógica: A Teoria da Investigação", "John Dewey", "Conhecimento como instrumento"),
+        ("Experiência e Natureza", "John Dewey", "Metafísica pragmatista naturalista"),
+        ("Democracia e Educação", "John Dewey", "Filosofia da educação pragmatista"),
+    ],
+    "PRAGMATISMO CLASSICO": [
+        ("Pragmatismo", "William James", "Fundamentos do pragmatismo clássico"),
+        ("As Variedades da Experiência Religiosa", "William James", "Psicologia e filosofia da religião"),
+        ("A Vontade de Crer", "William James", "Sobre fé, dúvida e ação"),
+        ("Como Tornar Nossas Ideias Claras", "Charles S. Peirce", "Máxima pragmática original"),
+    ],
+    "NEOPRAGMATISMO": [
+        ("A Filosofia e o Espelho da Natureza", "Richard Rorty", "Crítica à epistemologia tradicional"),
+        ("Consequências do Pragmatismo", "Richard Rorty", "Ensaios neopragmatistas"),
+        ("Contingência, Ironia e Solidariedade", "Richard Rorty", "Liberalismo pragmatista"),
+    ],
+    "PRAGMATISMO RADICAL": [
+        ("Essays in Radical Empiricism", "William James", "Empirismo radical e experiência pura"),
+        ("Um Universo Pluralista", "William James", "Pluralismo metafísico"),
+    ],
+    "CONVENCIONALISMO": [
+        ("A Ciência e a Hipótese", "Henri Poincaré", "Convencionalismo na ciência"),
+        ("O Valor da Ciência", "Henri Poincaré", "Natureza das teorias científicas"),
+    ],
+    "FILOSOFIA ANALITICA": [
+        ("Sobre o Sentido e a Referência", "Gottlob Frege", "Fundamentos da filosofia analítica"),
+        ("Sobre Denotar", "Bertrand Russell", "Teoria das descrições"),
+        ("Investigações Filosóficas", "Ludwig Wittgenstein", "Segundo Wittgenstein e jogos de linguagem"),
+    ],
+    "FILOSOFIA DA LINGUAGEM ORDINARIA": [
+        ("Investigações Filosóficas", "Ludwig Wittgenstein", "Análise da linguagem ordinária"),
+        ("Como Fazer Coisas com Palavras", "J.L. Austin", "Teoria dos atos de fala"),
+        ("Sentido e Sensibilia", "J.L. Austin", "Crítica aos dados sensoriais"),
+    ],
+    "HEDONISMO CIRENAICO": [
+        ("Vidas e Doutrinas dos Filósofos Ilustres", "Diógenes Laércio", "Sobre Aristipo e os cirenaicos"),
+        ("Filosofia Helenística", "A.A. Long & D.N. Sedley", "Textos e comentários sobre cirenaicos"),
+    ],
+    "EPICURISMO": [
+        ("Carta sobre a Felicidade (a Meneceu)", "Epicuro", "Fundamentos da ética epicurista"),
+        ("Da Natureza das Coisas", "Lucrécio", "Exposição poética do epicurismo"),
+        ("As Máximas Principais", "Epicuro", "Sentenças fundamentais"),
+    ],
+    "EPICURISMO MODERNO": [
+        ("O Jardim de Epicuro", "Irvin D. Yalom", "Epicurismo na psicoterapia moderna"),
+        ("Da Natureza das Coisas", "Lucrécio", "Clássico epicurista com relevância atual"),
+    ],
+    "HEDONISMO PSICOLOGICO": [
+        ("Leviatã", "Thomas Hobbes", "Natureza humana e busca do prazer"),
+        ("Princípios da Moral e da Legislação", "Jeremy Bentham", "Hedonismo psicológico e utilitarismo"),
+    ],
+    "UTILITARISMO HEDONISTA": [
+        ("Utilitarismo", "John Stuart Mill", "Defesa clássica do utilitarismo"),
+        ("Princípios da Moral e da Legislação", "Jeremy Bentham", "Fundamentos do utilitarismo hedonista"),
+        ("Os Métodos da Ética", "Henry Sidgwick", "Análise sistemática do utilitarismo"),
+    ],
+    "CONSEQUENCIALISMO": [
+        ("Razões e Pessoas", "Derek Parfit", "Consequencialismo contemporâneo"),
+        ("Utilitarismo", "John Stuart Mill", "Fundamentos consequencialistas"),
+    ],
+    "EUDEMONISMO": [
+        ("Ética a Nicômaco", "Aristóteles", "A eudaimonia como bem supremo"),
+        ("Ética a Eudemo", "Aristóteles", "Variação da ética aristotélica"),
+    ],
+    "ARISTOTELISMO": [
+        ("Ética a Nicômaco", "Aristóteles", "Obra fundamental sobre virtude e felicidade"),
+        ("Política", "Aristóteles", "Teoria política e social"),
+        ("Metafísica", "Aristóteles", "Investigação sobre o ser enquanto ser"),
+        ("Organon", "Aristóteles", "Lógica aristotélica"),
+    ],
+    "EXISTENCIALISMO SARTREANO": [
+        ("O Ser e o Nada", "Jean-Paul Sartre", "Ontologia fenomenológica existencialista"),
+        ("O Existencialismo é um Humanismo", "Jean-Paul Sartre", "Manifesto existencialista"),
+        ("A Náusea", "Jean-Paul Sartre", "Romance filosófico sobre contingência"),
+        ("Crítica da Razão Dialética", "Jean-Paul Sartre", "Marxismo existencialista"),
+    ],
+    "EXISTENCIALISMO CAMUSIANO": [
+        ("O Mito de Sísifo", "Albert Camus", "O absurdo e a revolta"),
+        ("O Estrangeiro", "Albert Camus", "Romance sobre o absurdo"),
+        ("O Homem Revoltado", "Albert Camus", "Revolta metafísica e histórica"),
+        ("A Peste", "Albert Camus", "Romance sobre solidariedade no absurdo"),
+    ],
+    "EXISTENCIALISMO KIERKEGAARDIANO": [
+        ("Temor e Tremor", "Søren Kierkegaard", "Fé e o salto de Abraão"),
+        ("O Conceito de Angústia", "Søren Kierkegaard", "Angústia e liberdade"),
+        ("Ou... Ou...", "Søren Kierkegaard", "Estágios da existência"),
+        ("A Doença para a Morte", "Søren Kierkegaard", "Desespero e o eu"),
+    ],
+    "EXISTENCIALISMO HEIDEGGERIANO": [
+        ("Ser e Tempo", "Martin Heidegger", "Analítica existencial do Dasein"),
+        ("Que é Metafísica?", "Martin Heidegger", "O nada e a angústia"),
+        ("Carta sobre o Humanismo", "Martin Heidegger", "Crítica ao humanismo tradicional"),
+        ("Os Conceitos Fundamentais da Metafísica", "Martin Heidegger", "Mundo, finitude, solidão"),
+    ],
+    "NIILISMO ATIVO": [
+        ("Assim Falou Zaratustra", "Friedrich Nietzsche", "Sobre-humano e eterno retorno"),
+        ("Além do Bem e do Mal", "Friedrich Nietzsche", "Crítica à moral tradicional"),
+        ("Genealogia da Moral", "Friedrich Nietzsche", "Origem dos valores morais"),
+        ("A Gaia Ciência", "Friedrich Nietzsche", "Morte de Deus e amor fati"),
+    ],
+    "NIILISMO PASSIVO": [
+        ("A Gaia Ciência", "Friedrich Nietzsche", "Descrição do niilismo passivo"),
+        ("A Vontade de Poder", "Friedrich Nietzsche", "Notas sobre niilismo"),
+    ],
+    "NIILISMO MORAL": [
+        ("O Crepúsculo dos Ídolos", "Friedrich Nietzsche", "Crítica radical à moralidade"),
+        ("O Anticristo", "Friedrich Nietzsche", "Contra valores cristãos"),
+    ],
+    "NIILISMO EPISTEMOLOGICO": [
+        ("Sobre a Verdade e a Mentira no Sentido Extra-Moral", "Friedrich Nietzsche", "Crítica à verdade objetiva"),
+        ("Investigação sobre o Entendimento Humano", "David Hume", "Ceticismo epistemológico"),
+    ],
+}
+
+# Explicação da estrutura hierárquica das perguntas
+EXPLICACAO_ESTRUTURA = """
+================================================================================
+ESTRUTURA DA ÁRVORE DE DECISÃO FILOSÓFICA - JUSTIFICATIVA DAS PERGUNTAS
+================================================================================
+
+A árvore foi construída seguindo uma hierarquia lógica de questões fundamentais
+da filosofia, partindo das mais gerais para as mais específicas:
+
+NÍVEL 0 - RAIZ (Questão Primordial):
+"Você acredita que existe uma verdade objetiva e universal?"
+------------------------------------------------------------
+Esta é a PRIMEIRA PERGUNTA porque estabelece a divisão mais fundamental na
+filosofia: Realismo vs Anti-realismo. Esta questão separa:
+- Sim: Filosofias que acreditam em verdades objetivas (Racionalismo, Empirismo)
+- Não: Filosofias céticas ou relativistas (Existencialismo, Niilismo)
+
+NÍVEL 1 (Epistemologia Fundamental):
+------------------------------------
+Sim → "A razão é superior à experiência sensorial?"
+      Separa RACIONALISTAS (razão) de EMPIRISTAS/PRAGMATISTAS (experiência)
+
+Não → "A existência humana possui valor/significado inerente?"
+      Separa correntes que CRIAM significado das NIILISTAS
+
+NÍVEL 2 (Metodologia e Valores):
+---------------------------------
+Refina as posições epistemológicas:
+- Para racionalistas: intuição intelectual vs pragmatismo
+- Para anti-realistas: felicidade/ética vs liberdade absoluta
+
+NÍVEL 3 (Escolas Específicas):
+-------------------------------
+Define características específicas de cada tradição:
+- Formas platônicas, empirismo moderado, hedonismo, autenticidade, etc.
+
+NÍVEL 4 e 5 (Detalhamento Fino):
+---------------------------------
+Distingue variantes dentro de cada escola filosófica principal.
+
+CÓDIGO DE CORES NA VISUALIZAÇÃO:
+---------------------------------
+- AZUL: Racionalismo e vertentes (razão pura, ideias inatas)
+- VERDE: Empirismo e Positivismo (experiência, observação)
+- LARANJA: Pragmatismo (utilidade, consequências práticas)
+- AMARELO: Hedonismo e Eudemonismo (prazer, felicidade, virtude)
+- ROXO: Existencialismo (autenticidade, liberdade, angústia)
+- VERMELHO: Niilismo (ausência de valores objetivos)
+- CINZA: Outros (análise linguística, convenções)
+
+Esta estrutura permite uma classificação sistemática e progressivamente refinada
+das posições filosóficas, começando pelas questões mais fundamentais.
+================================================================================
+"""
 def criar_arvore_filosofia():
     """
     Cria a árvore de decisão para identificar tendências filosóficas.
@@ -212,19 +431,44 @@ def fazer_questionario_interativo(arvore):
     print("-" * 80)
     print("Caminho percorrido:", " -> ".join(caminho))
     print(f"Total de decisoes: {len(caminho)}")
-    print("=" * 80 + "\n")
+    print("=" * 80)
+    
+    # Extrai o nome da corrente filosófica (primeira linha do resultado)
+    nome_corrente = nodo_atual.value.split('\n')[0]
+    
+    # Mostra recomendações de livros se disponíveis
+    if nome_corrente in LIVROS_RECOMENDADOS:
+        print("\n" + "=" * 80)
+        print("RECOMENDACOES DE LEITURA")
+        print("=" * 80)
+        print(f"\nPara aprofundar seus estudos em {nome_corrente}:\n")
+        
+        for i, (titulo, autor, descricao) in enumerate(LIVROS_RECOMENDADOS[nome_corrente], 1):
+            print(f"{i}. \"{titulo}\" - {autor}")
+            print(f"   {descricao}\n")
+        
+        print("=" * 80)
+    
+    print()
     return nodo_atual.value
 
 
 def mostrar_arvore_completa(arvore):
     """
-    Mostra a visualização gráfica completa da árvore de decisão.
+    Mostra a visualização gráfica completa da árvore de decisão com cores por categoria.
+    Nós exibem apenas o início dos textos para melhor legibilidade.
     """
-    # Necessita de ajuste.
     print("\nGerando visualizacao grafica da arvore de decisao...\n")
-    arvore.visualize(
-        title="Arvore de Decisao Filosofica Complexa - 32 Correntes",
-        figsize=(20, 12)
+    print("NOTA: Os nos mostram apenas o inicio do texto para facilitar visualizacao.")
+    print("      O texto completo aparece ao finalizar o questionario.\n")
+    
+    visualize_with_categories(
+        arvore,
+        title="Arvore de Decisao Filosofica - 32 Correntes (Colorido por Area)",
+        figsize=(30, 18),
+        max_char_per_line=20,  # Textos curtos e diretos
+        show_legend=True,
+        show_explanation=True
     )
 
 
@@ -308,17 +552,21 @@ def menu_principal():
     """
     Menu interativo para o usuário escolher o que fazer.
     """
-    arvore = criar_arvore_filosofia_2() # Ou criar_arvore_filosofia()
+    arvore = criar_arvore_filosofia() # Ou criar_arvore_filosofia_2()
+    
     while True:
         print("\n" + "=" * 80)
         print("ARVORE DE DECISAO FILOSOFICA COMPLEXA - MENU PRINCIPAL")
         print("=" * 80)
         print("\n1. Fazer o questionario interativo (6 niveis de perguntas)")
-        print("2. Visualizar a arvore completa graficamente")
+        print("2. Visualizar a arvore completa graficamente (com cores por area)")
         print("3. Ver informacoes sobre a estrutura da arvore")
         print("4. Ver estatisticas detalhadas das correntes")
-        print("5. Sair")
-        escolha = input("\n>>> Escolha uma opcao (1-5): ").strip()
+        print("5. Ver explicacao da hierarquia de perguntas")
+        print("6. Sair")
+        
+        escolha = input("\n>>> Escolha uma opcao (1-6): ").strip()
+        
         if escolha == '1':
             fazer_questionario_interativo(arvore)
             input("\nPressione ENTER para continuar...")
@@ -332,6 +580,9 @@ def menu_principal():
             mostrar_estatisticas_detalhadas(arvore)
             input("\nPressione ENTER para continuar...")
         elif escolha == '5':
+            print(EXPLICACAO_ESTRUTURA)
+            input("\nPressione ENTER para continuar...")
+        elif escolha == '6':
             print("\nObrigado por usar o sistema! Ate logo!\n")
             break
         else:
