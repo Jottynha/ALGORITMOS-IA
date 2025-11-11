@@ -1,7 +1,8 @@
 import pandas as pd
 import numpy as np
 from sklearn.model_selection import train_test_split, StratifiedKFold
-from sklearn.preprocessing import StandardScaler, LabelEncoder
+from sklearn.preprocessing import LabelEncoder
+import sklearn.preprocessing as prep
 from sklearn.impute import SimpleImputer
 import os
 
@@ -46,6 +47,16 @@ def preprocess_data(input_path, output_dir='data/processed/', test_size=0.2, ran
     print("ETAPA 1: CARREGAMENTO DOS DADOS")
     print("="*70)
     print(f"Dataset original: {df.shape[0]} linhas × {df.shape[1]} colunas")
+    
+    # AMOSTRAGEM ALEATÓRIA: Pegar apenas 10k linhas (se dataset for maior)
+    if df.shape[0] > 10000:
+        print(f"\nDataset muito grande! Pegando amostra aleatória de 10.000 linhas...")
+        df = df.sample(n=10000, random_state=42)  # random_state garante reprodutibilidade
+        print(f"Amostra selecionada: {df.shape[0]} linhas × {df.shape[1]} colunas")
+        print("   (Amostragem aleatória garante representatividade das classes)")
+    else:
+        print(f"\n✓ Dataset possui {df.shape[0]} linhas (menor que 10k, usando todas)")
+    
     print(f"\nColunas encontradas: {list(df.columns)}")
     print(f"\nValores nulos por coluna:\n{df.isnull().sum()}")
 
@@ -145,7 +156,7 @@ def preprocess_data(input_path, output_dir='data/processed/', test_size=0.2, ran
     print("\n" + "="*70)
     print("ETAPA 8: ESCALONAMENTO (StandardScaler)")
     print("="*70)
-    scaler = StandardScaler()
+    scaler = prep.MinMaxScaler()
     X_train_scaled = scaler.fit_transform(X_train)
     X_test_scaled = scaler.transform(X_test)
 
@@ -174,7 +185,7 @@ def preprocess_data(input_path, output_dir='data/processed/', test_size=0.2, ran
     )
     print(f"Salvos: y_train.csv e y_test.csv")  
     print(f"\nTodos os arquivos salvos em: '{output_dir}'")
-    return X_train_scaled, X_test_scaled, y_train, y_test, scaler, label_encoders
+    return X_train_scaled, X_test_scaled, y_train, y_test, scaler, label_encoders, X
 
 
 def get_kfold_splits(n_splits=5, random_state=42):
