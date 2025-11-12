@@ -1,12 +1,9 @@
-import pandas as pd
 import numpy as np
 from sklearn.neighbors import KNeighborsClassifier
-from sklearn.preprocessing import StandardScaler  # <- correção do import
-from sklearn.model_selection import cross_val_score, train_test_split, StratifiedKFold
+from sklearn.model_selection import cross_val_score, StratifiedKFold
 from sklearn.metrics import accuracy_score, precision_score, recall_score, classification_report
 from sklearn.pipeline import make_pipeline
 import matplotlib.pyplot as plt
-
 
 from preprocess import preprocess_data
 

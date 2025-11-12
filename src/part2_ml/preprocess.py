@@ -156,6 +156,7 @@ def preprocess_data(input_path, output_dir='data/processed/', test_size=0.2, ran
     print("\n" + "="*70)
     print("ETAPA 8: ESCALONAMENTO (StandardScaler)")
     print("="*70)
+    #scaler = prep.StandardScaler()
     scaler = prep.MinMaxScaler()
     X_train_scaled = scaler.fit_transform(X_train)
     X_test_scaled = scaler.transform(X_test)
