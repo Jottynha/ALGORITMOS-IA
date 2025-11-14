@@ -6,7 +6,7 @@ import sklearn.preprocessing as prep
 from sklearn.impute import SimpleImputer
 import os
 
-def preprocess_data(input_path, output_dir='data/processed/', test_size=0.2, random_state=42):
+def preprocess_data(input_path, output_dir='data/processed/', test_size=0.2, random_state=42, sample_size=None):
     """
     <============================================================>
                 PRÉ-PROCESSAMENTO COMPLETO DE DADOS
@@ -37,6 +37,10 @@ def preprocess_data(input_path, output_dir='data/processed/', test_size=0.2, ran
         Divide dados em K partes (folds)
         Treina K vezes, usando parte diferente para validar
         Reduz overfitting e dá estimativa mais confiável
+    
+    Args:
+        sample_size: Número de linhas para amostrar (None = usar todas)
+                    Exemplo: 10000, 50000, 100000
     <============================================================>
     """
     # Cria diretório de saída se não existir
@@ -48,17 +52,18 @@ def preprocess_data(input_path, output_dir='data/processed/', test_size=0.2, ran
     print("="*70)
     print(f"Dataset original: {df.shape[0]} linhas × {df.shape[1]} colunas")
     
-    # AMOSTRAGEM ALEATÓRIA: Pegar apenas 10k linhas (se dataset for maior)
-    if df.shape[0] > 10000:
-        print(f"\nDataset muito grande! Pegando amostra aleatória de 10.000 linhas...")
-        df = df.sample(n=10000, random_state=42)  # random_state garante reprodutibilidade
-        print(f"Amostra selecionada: {df.shape[0]} linhas × {df.shape[1]} colunas")
-        print("   (Amostragem aleatória garante representatividade das classes)")
+    # AMOSTRAGEM ALEATÓRIA: Pegar apenas sample_size linhas (se especificado)
+    if sample_size is not None and df.shape[0] > sample_size:
+        print(f"\nPegando amostra aleatoria de {sample_size:,} linhas...")
+        df = df.sample(n=sample_size, random_state=random_state)
+        print(f"Amostra selecionada: {df.shape[0]:,} linhas x {df.shape[1]} colunas")
     else:
-        print(f"\n✓ Dataset possui {df.shape[0]} linhas (menor que 10k, usando todas)")
+        if sample_size is None:
+            print(f"\nUsando todas as {df.shape[0]:,} linhas do dataset")
+        else:
+            print(f"\nDataset possui {df.shape[0]:,} linhas (menor que {sample_size:,}, usando todas)")
     
-    print(f"\nColunas encontradas: {list(df.columns)}")
-    print(f"\nValores nulos por coluna:\n{df.isnull().sum()}")
+
 
     # ETAPA 2: SEPARAR FEATURES (X) E TARGET (y)
     print("\n" + "="*70)
@@ -78,47 +83,29 @@ def preprocess_data(input_path, output_dir='data/processed/', test_size=0.2, ran
     if len(numerical_cols) > 0:
         imputer_num = SimpleImputer(strategy='median')
         X[numerical_cols] = imputer_num.fit_transform(X[numerical_cols])
-        print(f"Colunas numéricas preenchidas com MEDIANA: {list(numerical_cols)}")
     # 3.2 - Colunas categóricas: preencher com MODA
     categorical_cols = X.select_dtypes(include=['object']).columns
     if len(categorical_cols) > 0:
         imputer_cat = SimpleImputer(strategy='most_frequent')
         X[categorical_cols] = imputer_cat.fit_transform(X[categorical_cols])
-        print(f"Colunas categóricas preenchidas com MODA: {list(categorical_cols)}")
-    print(f"\nValores nulos após tratamento: {X.isnull().sum().sum()} (deve ser 0)")
+    print(f"Valores nulos apos tratamento: {X.isnull().sum().sum()}")
     
     # ETAPA 4: LABEL ENCODING (String → Número)
     print("\n" + "="*70)
-    print("ETAPA 4: LABEL ENCODING (Transformar Strings em Números)")
+    print("ETAPA 4: LABEL ENCODING (Transformar Strings em Numeros)")
     print("="*70)
-    print("Label Encoding converte categorias em valores numéricos ordinais.\n")
     label_encoders = {}  # Guardar encoders para uso futuro
     for col in categorical_cols:
         le = LabelEncoder()
         X[col] = le.fit_transform(X[col])
         label_encoders[col] = le
-        
-        # Mostrar mapeamento
-        mapping = {original: encoded for original, encoded in zip(le.classes_, range(len(le.classes_)))}
-        print(f"'{col}': {mapping}")
     
     # ETAPA 5: ONE-HOT ENCODING (opcional)
     print("\n" + "="*70)
     print("ETAPA 5: ONE-HOT ENCODING")
     print("="*70)
-    print("Útil quando NÃO há ordem natural entre categorias.\n")
-    
-    # Aqui depois nos pode escolher quais colunas aplicar one-hot
-    # Por padrão, vou aplicar em todas as categóricas já convertidas
-    # Se não quiser one-hot, só descomentar as linhas abaixo
-    
-    # X_encoded = pd.get_dummies(X, columns=categorical_cols, drop_first=True)
-    # print(f"Após one-hot encoding: {X_encoded.shape}")
-    
-    # Por enquanto, vou usar apenas Label Encoding (mais simples)
     X_encoded = X.copy()
-    print(f"Usando apenas Label Encoding (sem one-hot): {X_encoded.shape}")
-    print(f"Colunas finais: {list(X_encoded.columns)}")
+    print(f"Usando apenas Label Encoding: {X_encoded.shape}")
     
     # ETAPA 6: CODIFICAR TARGET (y)
     print("\n" + "="*70)
@@ -127,11 +114,10 @@ def preprocess_data(input_path, output_dir='data/processed/', test_size=0.2, ran
     if y.dtype == 'object':
         le_target = LabelEncoder()
         y_encoded = le_target.fit_transform(y)
-        mapping_target = {original: encoded for original, encoded in zip(le_target.classes_, range(len(le_target.classes_)))}
-        print(f"Target codificado: {mapping_target}")
+        print(f"Target codificado")
     else:
         y_encoded = y.values
-        print(f"Target já é numérico")
+        print(f"Target ja e numerico")
 
     # ETAPA 7: DIVISÃO TREINO/TESTE ESTRATIFICADA
     print("\n" + "="*70)
@@ -145,23 +131,13 @@ def preprocess_data(input_path, output_dir='data/processed/', test_size=0.2, ran
     )
     print(f"Conjunto de TREINO: {X_train.shape[0]} amostras ({(1-test_size)*100:.0f}%)")
     print(f"Conjunto de TESTE:  {X_test.shape[0]} amostras ({test_size*100:.0f}%)")
-    # Mostrar distribuição das classes
-    unique_train, counts_train = np.unique(y_train, return_counts=True)
-    unique_test, counts_test = np.unique(y_test, return_counts=True)
-    print(f"\nDistribuição das classes:")
-    print(f"   TREINO: {dict(zip(unique_train, counts_train))}")
-    print(f"   TESTE:  {dict(zip(unique_test, counts_test))}")
     
     # ETAPA 8: ESCALONAMENTO (StandardScaler)
     print("\n" + "="*70)
     print("ETAPA 8: ESCALONAMENTO (StandardScaler)")
     print("="*70)
-<<<<<<< Updated upstream
     #scaler = prep.StandardScaler()
     scaler = prep.MinMaxScaler()
-=======
-    scaler = prep.StandardScaler()
->>>>>>> Stashed changes
     X_train_scaled = scaler.fit_transform(X_train)
     X_test_scaled = scaler.transform(X_test)
 
@@ -176,11 +152,9 @@ def preprocess_data(input_path, output_dir='data/processed/', test_size=0.2, ran
     pd.DataFrame(X_test_scaled, columns=X_encoded.columns).to_csv(
         f'{output_dir}X_test_scaled.csv', index=False
     )
-    print(f"Salvos: X_train_scaled.csv e X_test_scaled.csv (para KNN/SVM)")
     # Salvando versão NÃO ESCALONADA (para árvores de decisão)
     X_train.to_csv(f'{output_dir}X_train.csv', index=False)
     X_test.to_csv(f'{output_dir}X_test.csv', index=False)
-    print(f"Salvos: X_train.csv e X_test.csv (para Árvores de Decisão)")
     # Salvando targets
     pd.DataFrame(y_train, columns=['target']).to_csv(
         f'{output_dir}y_train.csv', index=False
@@ -188,8 +162,7 @@ def preprocess_data(input_path, output_dir='data/processed/', test_size=0.2, ran
     pd.DataFrame(y_test, columns=['target']).to_csv(
         f'{output_dir}y_test.csv', index=False
     )
-    print(f"Salvos: y_train.csv e y_test.csv")  
-    print(f"\nTodos os arquivos salvos em: '{output_dir}'")
+    print(f"Arquivos salvos em: '{output_dir}'")
     return X_train_scaled, X_test_scaled, y_train, y_test, scaler, label_encoders, X
 
 
@@ -212,20 +185,11 @@ def get_kfold_splits(n_splits=5, random_state=42):
 
 
 if __name__ == "__main__":
-    # Trampo atoa de deixar isso aqui bonito
-    print("\n" + "╔" + "="*68 + "╗")
-    print("║" + " "*15 + "INICIANDO PRÉ-PROCESSAMENTO" + " "*22 + "║")
-    print("╚" + "="*68 + "╝")
+    print("\n" + "="*70)
+    print("INICIANDO PRE-PROCESSAMENTO")
+    print("="*70)
     input_file = 'data/raw/plant_growth_data.csv'
     X_train, X_test, y_train, y_test, scaler, encoders = preprocess_data(input_file)
-    print("\n" + "╔" + "="*68 + "╗")
-    print("║" + " "*18 + "PRÉ-PROCESSAMENTO CONCLUÍDO" + " "*16 + "║")
-    print("╚" + "="*68 + "╝")
-
-    # DEMONSTRAÇÃO: VALIDAÇÃO CRUZADA K-FOLD
     print("\n" + "="*70)
-    print("DEMONSTRAÇÃO: VALIDAÇÃO CRUZADA K-FOLD (5 Folds)")
+    print("PRE-PROCESSAMENTO CONCLUIDO")
     print("="*70)
-    kfold = get_kfold_splits(n_splits=5)
-    for fold, (train_idx, val_idx) in enumerate(kfold.split(X_train, y_train), 1):
-        print(f"Fold {fold}: Treino={len(train_idx)} amostras, Validação={len(val_idx)} amostras")
