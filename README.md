@@ -1,72 +1,83 @@
-# Algoritmos IA
-## Descrição do Projeto
+<h1 align="center">Trabalho Prático IA (2025/2)</h1>
 
-Este projeto explora **Árvores de Decisão** de duas formas:
+<div align="center">
 
-1. **Parte 1 - Implementação Manual (`src/part1_tree_manual/`)**
-   - Estrutura de dados de árvore binária do zero
-   - Visualização com NetworkX e Matplotlib
-   - Exemplo: Árvore de decisão filosófica com 32 correntes (6 níveis)
+![Python](https://img.shields.io/badge/python-blue?style=for-the-badge&logo=python&logoColor=white)
+![VS Code](https://img.shields.io/badge/visual%20studio%20code-blue?style=for-the-badge)
 
-2. **Parte 2 - Machine Learning (`src/part2_ml/`)**
-   - Pré-processamento robusto de dados
-   - Treinamento de modelos: Decision Tree, KNN, SVM
-   - Métricas de avaliação e validação cruzada
 
----
+📖:
+ [Visão Geral](#visão-geral) |
+[Como reproduzir](#como-reproduzir) |
+[Decisões Técnicas](#decisões-técnicas)
 
-## Instalação
-### Pré-requisitos
+</div>
 
-- **Python 3.8+** instalado
-- **pip** (gerenciador de pacotes Python)
-- **Git** (opcional, para clonar o repositório)
 
-### Instalar Dependências
+## Visão Geral
 
-```bash
-pip install -r requirements.txt
+<div align="justify">
+O objetivo do trabalho, realizado na disciplina de Inteligência Artificial ofertada pelo professor Tiago Aves de Oliveira, foi de compreender, implementar e comparar algoritmos clássicos de IA e Computação Natural, preparando e analisando dados reais.
+</div>
+
+### Partes do trabalho:
+O trabalho foi dividido em quatro partes:
+
+- Parte 1 - Árvore de decisão manual
+- Parte 2 - Supervisionado (Kaggle/UCI): KNN, SVM e Árvore 
+- Parte 3 - Algoritmo Genético (AG)
+- Parte 4 - Enxame e Imunes
+
+### Estrutura do Repositório:
+```
+TRABALHO PRÁTICO IA/
+│   .gitattributes
+│   README.md
+│   requirements.txt
+│   svm.model
+│   
+├───data
+│   ├───processed
+│   │       benchmark_results.csv
+│   │       comparison_report.txt
+│   │       confusion_matrix_dt_100000.png
+│   │       confusion_matrix_knn_100000.png
+│   │       confusion_matrix_svm_100000.png
+│   │       decision_tree_visualization.png
+│   │       decision_tree_visualization_100000.png
+│   │       X_test.csv
+│   │       X_test_scaled.csv
+│   │       X_train.csv
+│   │       X_train_scaled.csv
+│   │       y_test.csv
+│   │       y_train.csv
+│   │
+│   └───raw
+│           Watera.csv
+│
+└───src
+    ├───part1_tree_manual
+    │       tree_diagram.md
+    │       tree_image.png
+    │       tree_manual.py
+    │
+    ├───part2_ml
+    │   │   preprocess.py
+    │   │   train_knn.py
+    │   │   train_svm.py
+    │   │   train_tree.py
+    │   │   util_metrics.py
+    │   │
+    │   └───__pycache__
+    │           preprocess.cpython-310.pyc
+    │           preprocess.cpython-311.pyc
+    │           util_metrics.cpython-310.pyc
+    │
+    └───part3_ga
+            ga.py
 ```
 
----
-
-## Bibliotecas Utilizadas
-
-| Biblioteca | Versão | Por Que Usamos? |
-|------------|--------|-----------------|
-| **pandas** | 2.1.4 | Manipulação de dados tabulares (CSV, DataFrames) |
-| **numpy** | 1.26.3 | Operações numéricas eficientes (arrays, matrizes) |
-| **scikit-learn** | 1.3.2 | **Biblioteca principal de ML**: Decision Tree, KNN, SVM, pré-processamento, métricas |
-| **scipy** | 1.11.4 | Algoritmos científicos (dependência do scikit-learn) |
-
-### Sobre a escolha de cada Biblioteca
-
-#### **scikit-learn** 
-```python
-# Modelos de ML
-from sklearn.tree import DecisionTreeClassifier       # Árvore de Decisão
-from sklearn.neighbors import KNeighborsClassifier    # KNN
-from sklearn.svm import SVC                           # SVM
-
-# Pré-processamento
-from sklearn.preprocessing import StandardScaler      # Escalonamento (KNN/SVM)
-from sklearn.preprocessing import LabelEncoder        # String → Número
-
-# Métricas e Validação
-from sklearn.metrics import accuracy_score, confusion_matrix
-from sklearn.model_selection import train_test_split, cross_val_score
-```
-
-#### **pandas** + **numpy**
-```python
-import pandas as pd    # Ler CSV, manipular tabelas
-import numpy as np     # Operações matemáticas rápidas
-```
-
----
-
-## Estrutura do Projeto
-
+<!--
 ```
 TREE-DECISION/
 │
@@ -94,10 +105,75 @@ TREE-DECISION/
 ├── requirements.txt            # Dependências
 └── README.md                   # Este arquivo
 ```
+-->
+
+<!--
+Este projeto explora **Árvores de Decisão** de duas formas:
+
+1. **Parte 1 - Implementação Manual (`src/part1_tree_manual/`)**
+   - Estrutura de dados de árvore binária do zero
+   - Visualização com NetworkX e Matplotlib
+   - Exemplo: Árvore de decisão filosófica com 32 correntes (6 níveis)
+
+2. **Parte 2 - Machine Learning (`src/part2_ml/`)**
+   - Pré-processamento robusto de dados
+   - Treinamento de modelos: Decision Tree, KNN, SVM
+   - Métricas de avaliação e validação cruzada 
+-->
+
+
+
+## Como reproduzir
+### Pré-requisitos
+
+- **Python 3.8+** instalado
+- **pip** (gerenciador de pacotes Python)
+- **Git** (opcional, para clonar o repositório)
+
+### Instalar Dependências
+
+```bash
+pip install -r requirements.txt
+```
 
 ---
 
-## Como Usar
+### Bibliotecas Utilizadas
+
+| Biblioteca | Versão | Por Que Usamos? |
+|------------|--------|-----------------|
+| **pandas** | 2.1.4 | Manipulação de dados tabulares (CSV, DataFrames) |
+| **numpy** | 1.26.3 | Operações numéricas eficientes (arrays, matrizes) |
+| **scikit-learn** | 1.3.2 | **Biblioteca principal de ML**: Decision Tree, KNN, SVM, pré-processamento, métricas |
+| **scipy** | 1.11.4 | Algoritmos científicos (dependência do scikit-learn) |
+
+<!--
+### Sobre a escolha de cada Biblioteca
+
+#### **scikit-learn** 
+```python
+# Modelos de ML
+from sklearn.tree import DecisionTreeClassifier       # Árvore de Decisão
+from sklearn.neighbors import KNeighborsClassifier    # KNN
+from sklearn.svm import SVC                           # SVM
+
+# Pré-processamento
+from sklearn.preprocessing import StandardScaler      # Escalonamento (KNN/SVM)
+from sklearn.preprocessing import LabelEncoder        # String → Número
+
+# Métricas e Validação
+from sklearn.metrics import accuracy_score, confusion_matrix
+from sklearn.model_selection import train_test_split, cross_val_score
+```
+
+#### **pandas** + **numpy**
+```python
+import pandas as pd    # Ler CSV, manipular tabelas
+import numpy as np     # Operações matemáticas rápidas
+```
+-->
+
+## Decisões Técnicas
 
 ### **Parte 1: Árvore Manual (Filosófica)**
 
@@ -142,13 +218,12 @@ python3 train_knn.py
 # SVM (Support Vector Machine)
 python3 train_svm.py
 ```
-=
 
 ---
 
-## Pré-processamento Detalhado
+#### Pré-processamento Detalhado
 
-### **O que o `preprocess.py` faz?**
+##### **O que o `preprocess.py` faz?**
 
 1. **Valores Nulos:**
    - Numéricos: preenche com **mediana** (robusto a outliers)
