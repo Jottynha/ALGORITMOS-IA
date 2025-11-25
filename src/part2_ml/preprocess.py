@@ -188,7 +188,7 @@ if __name__ == "__main__":
     print("\n" + "="*70)
     print("INICIANDO PRE-PROCESSAMENTO")
     print("="*70)
-    input_file = 'data/raw/plant_growth_data.csv'
+    input_file = 'data/raw/Watera.csv'
     X_train, X_test, y_train, y_test, scaler, encoders = preprocess_data(input_file)
     print("\n" + "="*70)
     print("PRE-PROCESSAMENTO CONCLUIDO")
