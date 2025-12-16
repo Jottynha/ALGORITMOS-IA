@@ -2,7 +2,7 @@
 # =====================================
 # Automatiza execução de todas as partes do projeto
 
-.PHONY: help install clean part1 part2 part2-preprocess part2-dt part2-knn part2-svm part2-all part3 part4 part4-aco results
+.PHONY: help install clean part1 part2 part2-preprocess part2-dt part2-knn part2-svm part2-all part3 part4 part4-aco part4-clonalg results
 
 # Cores para output
 BLUE := \033[0;34m
@@ -27,7 +27,8 @@ help:
 	@echo "  $(YELLOW)make part2-svm$(NC)        - Treina apenas SVM"
 	@echo "  $(YELLOW)make part3$(NC)            - Executa Parte 3 (Algoritmo Genético)"
 	@echo "  $(YELLOW)make part4$(NC)            - Executa Parte 4 (Enxame e Imunes)"
-	@echo "  $(YELLOW)make part4-aco$(NC)        - Executa ACO (Knapsack Problem)"
+	@echo "  $(YELLOW)make part4-aco$(NC)        - Executa ACO vs GA (Knapsack Problem)"
+	@echo "  $(YELLOW)make part4-clonalg$(NC)    - Executa CLONALG vs ACO vs GA"
 	@echo "  $(YELLOW)make results$(NC)          - Exibe relatório de resultados"
 	@echo "  $(YELLOW)make clean$(NC)            - Remove arquivos processados e modelos"
 	@echo ""
@@ -110,12 +111,19 @@ part3:
 
 part4-aco:
 	@echo "$(BLUE)═══════════════════════════════════════════════════════════════$(NC)"
-	@echo "$(BLUE)║  PARTE 4: ACO (ANT COLONY OPTIMIZATION) - KNAPSACK          ║$(NC)"
+	@echo "$(BLUE)║  PARTE 4: ACO vs GA (KNAPSACK PROBLEM)                      ║$(NC)"
 	@echo "$(BLUE)═══════════════════════════════════════════════════════════════$(NC)"
 	@python3 src/part4_swarm_immune/aco.py
-	@echo "$(GREEN)✓ ACO concluído!$(NC)"
+	@echo "$(GREEN)✓ ACO vs GA concluído!$(NC)"
 
-part4: part4-aco
+part4-clonalg:
+	@echo "$(BLUE)═══════════════════════════════════════════════════════════════$(NC)"
+	@echo "$(BLUE)║  PARTE 4: CLONALG vs ACO vs GA (KNAPSACK PROBLEM)           ║$(NC)"
+	@echo "$(BLUE)═══════════════════════════════════════════════════════════════$(NC)"
+	@python3 src/part4_swarm_immune/clonag.py
+	@echo "$(GREEN)✓ CLONALG vs ACO vs GA concluído!$(NC)"
+
+part4: part4-aco part4-clonalg
 	@echo "$(BLUE)═══════════════════════════════════════════════════════════════$(NC)"
 	@echo "$(GREEN)✓ PARTE 4 CONCLUÍDA COM SUCESSO!$(NC)"
 	@echo "$(BLUE)═══════════════════════════════════════════════════════════════$(NC)"
