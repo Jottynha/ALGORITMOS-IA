@@ -165,6 +165,11 @@ make part2-svm        # Apenas SVM
 # Executar Parte 3 (Algoritmo Genético)
 make part3
 
+# Executar Parte 4 (Enxame e Imunes)
+make part4              # Executa ACO e CLONALG
+make part4-aco          # Apenas ACO vs GA
+make part4-clonalg      # Apenas CLONALG vs ACO vs GA
+
 # Ver resultados
 make results
 
@@ -515,6 +520,213 @@ igual ao limite de peso da mochila. Caso contrário, o fitness é zerado.
   - _Seleção de Pais por roleta:_ Cada gene recebe uma porcentagem com base em seu fitness, que dita a chance de que ele se torne pai através da roleta viciada (sem contar com o elitismo).
   - _Taxa de mutação variável:_ Após 50 gerações, a taxa de mutação sobe de 1% para 5%, a fim de garantir movimentações bem-vindas na diversidade genética dos genes disponíveis após esse momento.
 
+---
+
+### **Parte 4: Algoritmos de Enxame e Imunes**
+
+#### Execução no terminal:
+```bash
+# Executar ambos os algoritmos:
+make part4
+
+# Executar apenas ACO vs GA:
+make part4-aco
+
+# Executar comparação completa (CLONALG vs ACO vs GA):
+make part4-clonalg
+```
+
+#### O que faz:
+Esta parte implementa e compara **três algoritmos bio-inspirados** resolvendo o **Problema da Mochila (Knapsack 0/1)**:
+
+1. **ACO (Ant Colony Optimization)** - Otimização por Colônia de Formigas
+2. **GA (Genetic Algorithm)** - Algoritmo Genético (da Parte 3)
+3. **CLONALG (Clonal Selection Algorithm)** - Seleção Clonal (Sistema Imune Artificial)
+
+---
+
+#### **1. ACO - Ant Colony Optimization (`aco.py`)**
+
+##### Como funciona:
+Imagine formigas procurando comida. Elas deixam **feromônios** no caminho, e outras formigas seguem trilhas com mais feromônio. Com o tempo, o caminho mais curto acumula mais feromônio (porque as formigas completam o trajeto mais rápido).
+
+**No Knapsack:**
+- Cada "formiga" constrói uma solução selecionando itens probabilisticamente
+- Itens com **maior eficiência (valor/peso)** e **mais feromônio** têm maior chance de serem escolhidos
+- Boas soluções reforçam o feromônio nos itens selecionados
+- Feromônio evapora com o tempo (evita convergência prematura)
+
+##### Parâmetros principais:
+
+| Parâmetro | Valor | O que faz |
+|-----------|-------|-----------|
+| `n_ants=30` | 30 formigas | Cada formiga cria uma solução por iteração |
+| `alpha=1.0` | Peso do feromônio | Controla influência da trilha de feromônio |
+| `beta=2.0` | Peso da heurística | Controla influência da eficiência do item (valor/peso) |
+| `rho=0.5` | Taxa de evaporação | 50% do feromônio evapora a cada iteração |
+| `Q=100` | Quantidade de feromônio | Quanto feromônio é depositado nas soluções |
+
+##### Decisões de implementação:
+
+**Elitismo no depósito de feromônio:**
+```python
+# Apenas as top 30% soluções depositam feromônio
+n_elite = max(1, int(0.3 * len(solutions)))
+for sol, val, _ in solutions_sorted[:n_elite]:
+    # Deposita feromônio proporcional ao valor da solução
+```
+- **Por quê** evita que soluções ruins "poluam" a trilha de feromônio
+- **Alternativa:** Todas as formigas depositam (converge muito rápido)
+
+**Heurística baseada em eficiência:**
+```python
+self.heuristic = np.array([item.efficiency for item in items])
+# efficiency = value / weight (quanto valor por unidade de peso)
+```
+- **Por quê** guia as formigas para itens "valiosos e leves"
+- **Impacto:** Converge ~10x mais rápido que sem heurística
+
+**Resultados esperados:**
+- Encontra solução **ótima ou próxima do ótimo** (valor ~2239)
+- Convergência **rápida** (primeiras 10-20 iterações)
+- Alta **diversidade** de soluções (30/30 formigas encontram caminhos diferentes para o mesmo valor)
+
+---
+
+#### **2. CLONALG - Clonal Selection Algorithm (`clonag.py`)**
+
+##### Como funciona:
+Inspirado no **sistema imune humano**. Quando um vírus invade o corpo, células de defesa (linfócitos) que reconhecem o invasor se multiplicam (clonagem) e sofrem mutações para melhorar o reconhecimento.
+
+**No Knapsack:**
+- **População inicial:** 80 soluções aleatórias
+- **Seleção:** Escolhe as 15 melhores soluções (maior valor)
+- **Clonagem:** Cada solução selecionada gera clones (quanto melhor a solução, mais clones)
+- **Hipermutação:** Clones sofrem mutações (soluções piores mutam mais)
+- **Seleção clonal:** Clones competem entre si, sobrevivem os melhores
+- **Injeção de diversidade:** 30 soluções aleatórias entram a cada geração
+
+##### Parâmetros principais:
+
+| Parâmetro | Valor | O que faz |
+|-----------|-------|-----------|
+| `pop_size=80` | 80 indivíduos | Tamanho da população |
+| `n_select=15` | 15 selecionados | Quantos serão clonados |
+| `beta=1.2` | Fator de clonagem | Controla quantos clones por solução |
+| `n_random=30` | 30 aleatórios | Novas soluções injetadas por geração |
+
+##### Decisões de implementação:
+
+**Taxa de mutação adaptativa:**
+```python
+# Soluções piores mutam mais (exploração)
+# Soluções melhores mutam menos (exploração fina)
+val_norm = val / (max_val + 1e-9)  # Normaliza entre 0 e 1
+rate = 0.5 * (1.0 - val_norm * 0.8)  # 0.1 a 0.5
+```
+- **Por quê** soluções ruins precisam mudar drasticamente. Soluções boas precisam apenas ajustes finos.
+- **Impacto:** Evita convergência prematura (toda população idêntica)
+
+**Hipermutação para indivíduos convergidos:**
+```python
+# Se uma solução é muito similar à melhor (< 5 bits diferentes)
+if hamming_distance(sol, best_sol) < 5:
+    # Aplica mutação muito agressiva (40-60%)
+    rate = np.random.uniform(0.4, 0.6)
+```
+- **Por quê** "sacode" a população quando ela está estagnada
+- **Problema resolvido:** Versão anterior colapsava para 1/80 soluções únicas. Agora mantém 56-69/80.
+
+**Seleção híbrida (50% fitness + 50% diversidade):**
+```python
+# Metade da população: melhores por valor
+elite = population[:pop_size // 2]
+
+# Outra metade: remove duplicatas exatas
+diverse = [soluções únicas]
+```
+- **Por quê** balanceia qualidade (não perder boas soluções) com diversidade (não decorar)
+- **Trade-off:** Pode manter soluções subótimas se forem únicas
+
+**Reparo de soluções inválidas:**
+```python
+# Se peso excede capacidade, remove itens de menor eficiência
+while weight > capacity:
+    # Remove item menos eficiente (menor valor/peso)
+```
+- **Por quê** as mutações podem gerar soluções que excedem a capacidade da mochila
+- **Alternativa:** Penalizar com fitness=0 (desperdiça avaliações)
+
+**Resultados esperados:**
+- Encontra solução **próxima do ótimo** (valor ~2214, 98.9% do ótimo)
+- Convergência **gradual** (melhora ao longo de 100 gerações)
+- Boa **diversidade** mantida (56-69/80 soluções únicas)
+
+---
+
+#### **3. Comparação: ACO vs GA vs CLONALG**
+
+##### Gráficos gerados:
+
+**Figura 1 - Convergência e Média:**
+- Mostra como cada algoritmo encontra soluções melhores ao longo do tempo
+- ACO converge rápido (iteração 1-10), GA e CLONALG gradualmente
+
+**Figura 2 - Diversidade e Taxa de Convergência:**
+- **Diversidade:** Quantas soluções diferentes existem na população
+  - ACO: ~30/30 (todas diferentes, mesmo valor)
+  - CLONALG: ~60/80 (boa diversidade)
+  - GA: ~100/100 (máxima diversidade)
+- **Taxa de convergência:** Velocidade de melhoria (valor ganho por iteração)
+
+**Figura 3 - Eficiência e Comparação Final:**
+- **Eficiência:** Valor final ÷ tempo de execução (quanto "retorno por segundo")
+  - CLONALG: ~475 valor/s (mais rápido)
+  - ACO: ~230 valor/s
+  - GA: ~200 valor/s
+- **Qualidade vs Tempo:** Compara valor final e tempo de execução
+
+##### Por que ACO vence?
+
+| Métrica | ACO | GA | CLONALG |
+|---------|-----|-----|---------|
+| **Valor final** | 2239 (100%) | ~2100 (93.8%) | 2214 (98.9%) |
+| **Tempo** | ~10s | ~10s | ~5s |
+| **Convergência** | Rápida (10 iter) | Lenta (100 ger) | Média (60 ger) |
+| **Diversidade** | Alta (30/30) | Alta (100/100) | Média (60/80) |
+
+**ACO é melhor porque:**
+1. **Heurística guiada:** Usa eficiência (valor/peso) como "cheiro" inicial
+2. **Exploração inteligente:** Feromônio reforça bons caminhos, mas evaporação permite exploração
+3. **Elitismo controlado:** Só 30% depositam feromônio (evita convergência prematura)
+
+**Quando usar cada algoritmo:**
+- **ACO:** Problemas com **estrutura de grafo** (caminhos, rotas, sequências). Converge rápido com heurística boa.
+- **GA:** Problemas **sem heurística óbvia**. Genérico, funciona para tudo (mas não é o melhor em nada).
+- **CLONALG:** Problemas que precisam **alta diversidade** (multiobjetivo, paisagens rugosas). Rápido e eficiente.
+
+---
+
+#### Problema resolvido: Knapsack 0/1
+
+**Configuração padrão:**
+- **50 itens** gerados aleatoriamente (peso: 5-50, valor: 10-100)
+- **Capacidade da mochila:** 686 (metade do peso total)
+- **Semente aleatória:** 42 (itens), 100/200/300 (GA/ACO/CLONALG)
+
+**Solução ótima encontrada pelo ACO:**
+- **Valor:** 2239
+- **Peso:** 686/686 (100% da capacidade)
+- **Itens selecionados:** 32/50
+
+**Por que não testamos algoritmos exatos (programação dinâmica)?**
+- Knapsack 0/1 tem solução exata O(n×W), onde n=itens e W=capacidade
+- Para n=50, W=686: ~34.300 operações (instantâneo)
+- **Mas:** Algoritmos exatos não escalam. Com n=10.000, W=100.000: 1 bilhão de operações
+- **Algoritmos bio-inspirados** escalam melhor (tempo proporcional a população×gerações, não a capacidade)
+
+---
+
 ## Resultados e Comparações
 
 ### Visualizar Resultados
@@ -534,11 +746,11 @@ Este comando exibe:
 
 **Comparação Típica (Water Quality Dataset):**
 
-| Algoritmo | Acurácia Teste | Tempo Treino | Overfitting | Interpretabilidade |
-|-----------|----------------|--------------|-------------|-------------------|
-| **Decision Tree** | ~98.7% | ~0.45s | Baixo (0.008%) | ⭐⭐⭐⭐⭐ |
-| **KNN** | ~92.6% | ~0.23s | Médio (2.8%) | ⭐⭐ |
-| **SVM** | ~95.0% | ~590s | Baixo (-0.07%) | ⭐ |
+| Algoritmo | Acurácia Teste | Tempo Treino | Overfitting |
+|-----------|----------------|--------------|-------------|
+| **Decision Tree** | ~98.7% | ~0.45s | Baixo (0.008%) | 
+| **KNN** | ~92.6% | ~0.23s | Médio (2.8%) | 
+| **SVM** | ~95.0% | ~590s | Baixo (-0.07%) | 
 
 **Análise:**
 - **Decision Tree:** Melhor acurácia e interpretabilidade. Rápida de treinar. **Escolha ideal para este dataset.**
@@ -557,13 +769,19 @@ Este comando exibe:
 
 ```
 data/processed/
-├── benchmark_results.csv           # Métricas de todos os treinos
-├── comparison_report.txt           # Relatório formatado
+├── benchmark_results.csv           # Métricas de todos os treinos (Parte 2)
+├── comparison_report.txt           # Relatório formatado (Parte 2)
 ├── confusion_matrix_dt_100000.png  # Matriz de confusão (Decision Tree)
 ├── confusion_matrix_knn_100000.png # Matriz de confusão (KNN)
 ├── confusion_matrix_svm_100000.png # Matriz de confusão (SVM)
 ├── decision_tree_visualization_100000.png  # Árvore completa
 ├── knn_k_selection.png             # Gráfico de seleção de K
+├── aco_fig1_convergencia_media.png # ACO vs GA: Convergência e média
+├── aco_fig2_diversidade_feromonios.png # ACO: Diversidade e feromônios
+├── aco_fig3_eficiencia_comparacao.png  # ACO vs GA: Eficiência
+├── fig1_convergencia_media.png     # CLONALG vs ACO vs GA: Convergência
+├── fig2_diversidade_taxa.png       # CLONALG vs ACO vs GA: Diversidade
+├── fig3_eficiencia_comparacao.png  # CLONALG vs ACO vs GA: Eficiência
 ├── X_train.csv                     # Features de treino (não escalonadas)
 ├── X_train_scaled.csv              # Features de treino (escalonadas)
 ├── X_test.csv                      # Features de teste (não escalonadas)
