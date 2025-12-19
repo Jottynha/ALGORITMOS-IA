@@ -813,6 +813,7 @@ data/processed/
 **Disciplina:** Inteligência Artificial (2025/2)  
 **Professor:** Tiago Alves de Oliveira  
 **Instituição:** Cefet-MG Divinópolis
+
 **Alunos:** João Pedro Rodrigues Silva e Samuel Silva Gomes
 
 ---
